@@ -1,0 +1,56 @@
+[workspace]
+resolver = "2"
+members = ["backend", "common", "frontend"]
+default-members = ["common"]
+
+[workspace.package]
+version = "0.0.0"
+edition = "2021"
+license = "GPL-3.0"
+
+[workspace.dependencies]
+common.path = "./common"
+
+[profile.release]
+codegen-units = 1
+debug = 2
+incremental = false
+lto = true
+
+[workspace.lints.rust]
+absolute-paths-not-starting-with-crate = "warn"
+deprecated-in-future = "warn"
+missing-debug-implementations = "warn"
+single-use-lifetimes = "warn"
+static-mut-refs = "forbid"
+trivial-casts = "warn"
+unsafe-op-in-unsafe-fn = "forbid"
+
+[workspace.lints.clippy]
+alloc_instead_of_core = "warn"
+as_underscore = "forbid"
+cast_lossless = "warn"
+cloned_instead_of_copied = "warn"
+empty_drop = "warn"
+explicit_deref_methods = "warn"
+explicit_into_iter_loop = "warn"
+explicit_iter_loop = "warn"
+flat_map_option = "warn"
+host_endian_bytes = "warn"
+if_not_else = "warn"
+if_then_some_else_none = "warn"
+ignored_unit_patterns = "warn"
+implicit_clone = "warn"
+inconsistent_struct_constructor = "warn"
+manual_let_else = "warn"
+match_same_arms = "warn"
+mismatching_type_param_order = "warn"
+redundant_closure_for_method_calls = "warn"
+self_named_module_files = "warn"
+semicolon_if_nothing_returned = "warn"
+semicolon_inside_block = "warn"
+semicolon_outside_block = "warn"
+separated_literal_suffix = "warn"
+string_to_string = "warn"
+undocumented_unsafe_blocks = "warn"
+uninlined_format_args = "warn"
