@@ -17,6 +17,11 @@ esp-backtrace = { version = "0.13.0", features = ["esp32c3", "exception-handler"
 esp-hal = { version = "0.19.0", features = ["esp32c3", "defmt"] }
 esp-println = { version = "0.10.0", default-features = false, features = ["esp32c3", "defmt-espflash", "uart"] }
 mipidsi = "0.8.0"
+rgb = { version = "0.8.45", default-features = false, features = ["defmt-03"] }
+slint = { git = "https://github.com/wetheredge/slint", rev = "30f0605c654d65028ce1cb8f177a500db7823d8d", default-features = false, features = ["compat-1-2", "libm", "unsafe-single-threaded", "renderer-software"] }
+
+[build-dependencies]
+slint-build = { git = "https://github.com/wetheredge/slint", rev = "30f0605c654d65028ce1cb8f177a500db7823d8d" }
 
 [lints]
 workspace = true
