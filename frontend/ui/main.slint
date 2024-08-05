@@ -1,9 +1,295 @@
-import { Button } from "std-widgets.slint";
+export enum WifiState {
+    off,
+    scanning,
+    connected,
+}
 
-export component HelloWorld inherits Window {
-    default-font-size: 32px;
+component StatusBar {
+    in property <string> dc-in;
+    in property <string> cpu;
+    in property <WifiState> wifi;
+    in property <string> wifi-ssid;
 
-    Button {
-        text: "hello world";
+    Rectangle {
+        background: white;
+
+        HorizontalLayout {
+            spacing: 6px;
+            padding-left: self.spacing;
+            padding-right: self.padding-left;
+
+            Text {
+                vertical-alignment: center;
+                text: root.wifi-ssid;
+                font-size: 14px;
+            }
+
+            // Spacer
+            Rectangle { }
+
+            Text {
+                vertical-alignment: center;
+                text: "\{root.cpu}%";
+                font-size: 14px;
+            }
+
+            Text {
+                vertical-alignment: center;
+                text: "\{root.dc-in}V";
+                font-size: 14px;
+            }
+        }
+    }
+}
+
+export struct CellInfo {
+    voltage: string,
+    ir: string,
+}
+
+export enum ChannelState {
+    done,
+    charging,
+    discharging,
+    error,
+}
+
+export struct ChannelInfo {
+    chemistry: string,
+    cut-off: string,
+    state: ChannelState,
+    state-label: string,
+    duration: string,
+    voltage: string,
+    current: string,
+    cells: [CellInfo],
+}
+
+component Cell {
+    in property <int> index;
+    in property <[CellInfo]> cells;
+
+    property <CellInfo> state: cells[index - 1];
+    visible: cells.length >= index;
+
+    HorizontalLayout {
+        spacing: 4px;
+
+        Text {
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            font-size: 16px;
+            text: root.index;
+        }
+
+        VerticalLayout {
+            Text {
+                font-size: 12px;
+                vertical-alignment: center;
+                text: "\{root.state.voltage}V";
+            }
+
+            Text {
+                font-size: 12px;
+                vertical-alignment: center;
+                text: "\{root.state.ir}mΩ";
+            }
+        }
+    }
+}
+
+component Channel {
+    in property <bool> selected;
+    in property <ChannelInfo> state;
+
+    horizontal-stretch: 1;
+    vertical-stretch: 1;
+
+    Rectangle {
+        // background: state.state == ChannelState.error ? red
+        //     : state.state == ChannelState.charging ? blue
+        //     : state.state == ChannelState.discharging ? purple
+        //     : green;
+        background: white;
+        border-width: 3px;
+        border-color: selected ? black : white;
+
+        VerticalLayout {
+
+            Text {
+                font-size: 18px;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                text: "\{root.state.chemistry} \{root.state.cut-off}V";
+            }
+
+            Text {
+                font-size: 14px;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                text: "\{root.state.state-label} \{root.state.duration}";
+            }
+
+            HorizontalLayout {
+                padding-left: 24px;
+                padding-right: self.padding-left;
+
+                Text {
+                    horizontal-alignment: left;
+                    vertical-alignment: center;
+                    font-size: 24px;
+                    text: "\{root.state.voltage}V";
+                }
+
+                Text {
+                    horizontal-alignment: right;
+                    vertical-alignment: center;
+                    font-size: 24px;
+                    text: "\{root.state.current}A";
+                }
+            }
+
+            GridLayout {
+                spacing: 6px;
+
+                Cell {
+                    index: 1;
+                    cells: root.state.cells;
+                }
+
+                Cell {
+                    index: 2;
+                    cells: root.state.cells;
+                }
+
+                Cell {
+                    index: 3;
+                    cells: root.state.cells;
+                }
+
+                Cell {
+                    row: 1;
+                    index: 4;
+                    cells: root.state.cells;
+                }
+
+                Cell {
+                    index: 5;
+                    cells: root.state.cells;
+                }
+
+                Cell {
+                    index: 6;
+                    cells: root.state.cells;
+                }
+            }
+        }
+    }
+}
+
+export component App inherits Window {
+    in property <ChannelInfo> channel-1: {
+        chemistry: "LiPo",
+        cut-off: "4.20",
+        state: ChannelState.charging,
+        state-label: "charging",
+        duration: "12:34",
+        voltage: "11.7",
+        current: "1.0",
+        cells: [
+            { voltage: "3.69", ir: "2.00" },
+            { voltage: "3.70", ir: "2.01" },
+            { voltage: "3.71", ir: "2.02" }
+        ]
+    };
+    in property <ChannelInfo> channel-2: {
+        chemistry: "LiPo",
+        cut-off: "4.20",
+        state: ChannelState.error,
+        state-label: "error",
+        duration: "12:34",
+        voltage: "15.6",
+        current: "1.5",
+        cells: [
+            { voltage: "3.69", ir: "2.00" },
+            { voltage: "3.70", ir: "2.01" },
+            { voltage: "3.71", ir: "2.02" },
+            { voltage: "3.70", ir: "2.03" }
+        ]
+    };
+    in property <ChannelInfo> channel-3: {
+        chemistry: "LiPo",
+        cut-off: "4.20",
+        state: ChannelState.discharging,
+        state-label: "discharging",
+        duration: "12:34",
+        voltage: "19.5",
+        current: "2.0",
+        cells: [
+            { voltage: "3.69", ir: "2.00" },
+            { voltage: "3.70", ir: "2.01" },
+            { voltage: "3.71", ir: "2.02" },
+            { voltage: "3.70", ir: "2.03" },
+            { voltage: "3.71", ir: "2.04" }
+        ]
+    };
+    in property <ChannelInfo> channel-4: {
+        chemistry: "LiPo",
+        cut-off: "4.20",
+        state: ChannelState.done,
+        state-label: "done",
+        duration: "12:34",
+        voltage: "25.2",
+        current: "0.0",
+        cells: [
+            { voltage: "4.20", ir: "2.00" },
+            { voltage: "4.20", ir: "2.01" },
+            { voltage: "4.20", ir: "2.02" },
+            { voltage: "4.20", ir: "2.03" },
+            { voltage: "4.20", ir: "2.04" },
+            { voltage: "4.20", ir: "2.05" }
+        ]
+    };
+
+    in property <int> selected: 0;
+
+    width: 480px;
+    height: 320px;
+    background: black;
+
+    VerticalLayout {
+        spacing: 1px;
+
+        StatusBar {
+            dc-in: "24.0";
+            cpu: "10.0";
+            wifi: connected;
+            wifi-ssid: "SSID";
+        }
+
+        GridLayout {
+            spacing: parent.spacing;
+
+            Channel {
+                selected: selected == 1;
+                state: root.channel-1;
+            }
+
+            Channel {
+                selected: selected == 2;
+                state: root.channel-2;
+            }
+
+            Channel {
+                row: 1;
+                selected: selected == 3;
+                state: root.channel-3;
+            }
+
+            Channel {
+                selected: selected == 4;
+                state: root.channel-4;
+            }
+        }
     }
 }

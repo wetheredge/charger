@@ -29,8 +29,8 @@ static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
 ///
 /// Must be called exactly once before any allocations
 unsafe fn init_heap() {
-    const HEAP_SIZE: usize = 32 * 1024;
-    static mut HEAP: MaybeUninit<[u8; HEAP_SIZE]> = MaybeUninit::uninit();
+    const HEAP_SIZE: usize = 128 * 1024;
+    static mut HEAP: MaybeUninit<[u32; HEAP_SIZE / 4]> = MaybeUninit::uninit();
 
     // SAFETY:
     // - `init_heap` is required to be called exactly once, before any allocations
@@ -64,7 +64,7 @@ fn main() -> ! {
     let delay = Delay::new(&clocks);
     let io = Io::new(peripherals.GPIO, peripherals.IO_MUX);
 
-    let spi = Spi::new(peripherals.SPI2, 50.MHz(), SpiMode::Mode0, &clocks)
+    let spi = Spi::new(peripherals.SPI2, 60.MHz(), SpiMode::Mode0, &clocks)
         .with_sck(io.pins.gpio6)
         .with_mosi(io.pins.gpio7)
         .with_miso(io.pins.gpio2);
@@ -79,6 +79,7 @@ fn main() -> ! {
 
         mipidsi::Builder::new(mipidsi::models::ILI9486Rgb666, interface)
             .orientation(Orientation::new().flip_vertical().rotate(Rotation::Deg90))
+            .color_order(mipidsi::options::ColorOrder::Bgr)
             .init(&mut delay.clone())
             .unwrap()
     };
@@ -171,6 +172,8 @@ mod ui {
     }
 
     pub(crate) fn run(delay: Delay, display: super::Display<'_>) -> ! {
+        print_free();
+
         let mut buffer = Buffer::new(display);
         let window = MinimalSoftwareWindow::new(RepaintBufferType::NewBuffer);
         window.set_size(slint::PhysicalSize::new(
@@ -183,10 +186,17 @@ mod ui {
         }))
         .unwrap();
 
-        let ui = components::HelloWorld::new().unwrap();
-        ui.show().unwrap();
+        print_free();
+        let app = components::App::new().unwrap();
+        print_free();
+        app.show().unwrap();
+        print_free();
 
+        let mut selected = 0;
         loop {
+            app.set_selected(selected);
+            selected = (selected + 1) % 5;
+
             slint::platform::update_timers_and_animations();
 
             window.draw_if_needed(|renderer| {
@@ -205,5 +215,9 @@ mod ui {
             // TODO: yield
             delay.delay_millis(250);
         }
+    }
+
+    fn print_free() {
+        defmt::info!("free = {=u32}", crate::ALLOCATOR.free() as u32);
     }
 }
